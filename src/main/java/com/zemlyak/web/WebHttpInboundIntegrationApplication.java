@@ -1,5 +1,6 @@
 package com.zemlyak.web;
 
+import com.zemlyak.web.processing.*;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -8,6 +9,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.integration.annotation.Transformer;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.http.inbound.HttpRequestHandlingMessagingGateway;
 import org.springframework.integration.http.inbound.RequestMapping;
@@ -48,6 +51,18 @@ public class WebHttpInboundIntegrationApplication {
         gateway.setRequestMapping(mapping);
         gateway.setRequestPayloadType(String.class);
         return gateway;
+    }
+
+    @Bean
+    @Transformer(inputChannel="httpRequestChannel",outputChannel = "checkHeaders")
+    public MessageTransformer<String,SimpleResponse> requestTransformer(){
+        return new ToResponseTransformer();
+    }
+
+    @Bean
+    @ServiceActivator(inputChannel="checkHeaders",outputChannel = "httpReplyChannel")
+    public HeaderPrinter headerPrinter(){
+        return new HeaderPrinterImpl();
     }
 
     private List<HttpMessageConverter<?>> getConverters(){
