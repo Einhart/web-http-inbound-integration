@@ -13,6 +13,10 @@ public class ToResponseTransformer implements MessageTransformer<String,SimpleRe
             System.out.println("header '" + headerEntry.getKey() + "': " + headerEntry.getValue());
         }
 
+        /*if(true){
+            throw new IllegalStateException("Some illegal state");
+        }    */
+
         Message<SimpleResponse> targetMessage = MessageBuilder
                 .withPayload(new SimpleResponse())
                 .copyHeaders( message.getHeaders())

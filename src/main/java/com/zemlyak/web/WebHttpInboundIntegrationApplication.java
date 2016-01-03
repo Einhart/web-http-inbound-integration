@@ -16,8 +16,7 @@ import org.springframework.integration.http.inbound.HttpRequestHandlingMessaging
 import org.springframework.integration.http.inbound.RequestMapping;
 import org.springframework.messaging.MessageChannel;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Configuration
 @SpringBootApplication
@@ -38,6 +37,11 @@ public class WebHttpInboundIntegrationApplication {
     }
 
     @Bean
+    public MessageChannel requestErrorChannel(){
+        return new DirectChannel();
+    }
+
+    @Bean
     public HttpRequestHandlingMessagingGateway httpInbound(){
         RequestMapping mapping = new RequestMapping();
         mapping.setPathPatterns("/rest/service/test");
@@ -46,10 +50,11 @@ public class WebHttpInboundIntegrationApplication {
         HttpRequestHandlingMessagingGateway gateway = new HttpRequestHandlingMessagingGateway();
         gateway.setReplyChannel(httpReplyChannel());
         gateway.setRequestChannel(httpRequestChannel());
-
+        gateway.setErrorChannel(requestErrorChannel());
         gateway.setMessageConverters(getConverters());
         gateway.setRequestMapping(mapping);
         gateway.setRequestPayloadType(String.class);
+        gateway.setMergeWithDefaultConverters(true);
         return gateway;
     }
 
@@ -62,6 +67,12 @@ public class WebHttpInboundIntegrationApplication {
     @Bean
     @ServiceActivator(inputChannel="checkHeaders",outputChannel = "httpReplyChannel")
     public HeaderPrinter headerPrinter(){
+        return new HeaderPrinterImpl();
+    }
+
+    @Bean
+    @ServiceActivator(inputChannel="requestErrorChannel",outputChannel = "httpReplyChannel")
+    public HeaderPrinter headerPrinter2(){
         return new HeaderPrinterImpl();
     }
 
